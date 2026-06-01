@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#121212" />
+    <title>Week Planner</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Notion Week Planner</p>
+          <h1>课程表 / 周时间规划</h1>
+          <p class="subtitle">改数据库后，重新打开或点击刷新，就会按时间自动重排彩色块。</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="themeToggleButton" class="ghost-button" type="button">浅色</button>
+          <button id="refreshButton" class="ghost-button" type="button">刷新</button>
+        </div>
+      </header>
+
+      <section class="meta-row">
+        <div class="meta-card">
+          <span class="meta-label">本周</span>
+          <strong id="weekLabel">加载中...</strong>
+        </div>
+        <div class="meta-card">
+          <span class="meta-label">来源</span>
+          <strong id="sourceLabel">Notion 主库</strong>
+        </div>
+        <div class="meta-card">
+          <span class="meta-label">最后同步</span>
+          <strong id="updatedAtLabel">--</strong>
+        </div>
+      </section>
+
+      <section class="legend" id="legend"></section>
+
+      <section class="planner-card">
+        <div id="planner" class="planner">
+          <div class="planner-loading">正在读取本周安排...</div>
+        </div>
+      </section>
+    </main>
+
+    <template id="legendItemTemplate">
+      <div class="legend-item">
+        <span class="legend-dot"></span>
+        <span class="legend-text"></span>
+      </div>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

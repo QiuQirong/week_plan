@@ -20,6 +20,8 @@ const refreshButtonEl = document.querySelector("#refreshButton");
 const themeToggleButtonEl = document.querySelector("#themeToggleButton");
 
 const THEME_STORAGE_KEY = "notion-week-planner-theme";
+const API_URL = "./api/week";
+const MOCK_URL = "./mock-week.json";
 
 bootTheme();
 
@@ -37,10 +39,13 @@ void loadWeek();
 async function loadWeek({ force = false } = {}) {
   plannerEl.innerHTML = `<div class="planner-loading">${force ? "正在刷新..." : "正在读取本周安排..."}</div>`;
 
-  const url = force ? `/api/week?ts=${Date.now()}` : "/api/week";
+  const url = force ? `${API_URL}?ts=${Date.now()}` : API_URL;
 
   try {
-    const response = await fetch(url);
+    let response = await fetch(url);
+    if (!response.ok) {
+      response = await fetch(force ? `${MOCK_URL}?ts=${Date.now()}` : MOCK_URL);
+    }
     if (!response.ok) {
       throw new Error(`Request failed with ${response.status}`);
     }

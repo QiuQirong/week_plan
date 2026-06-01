@@ -6,6 +6,7 @@ export function getWeekWindow(now = new Date(), timeZone = "Asia/Shanghai") {
   const localMidnight = new Date(`${zoned.dateKey}T00:00:00+08:00`);
   const day = zoned.weekday;
 
+  // 周日时显示下一周；其余时间显示本周。
   const offsetToMonday = day === 0 ? 1 : 1 - day;
   const start = new Date(localMidnight.getTime() + offsetToMonday * DAY_MS);
   const end = new Date(start.getTime() + 6 * DAY_MS);
@@ -98,7 +99,8 @@ export function combineDateAndClock(dateKey, clock, timeZone = "Asia/Shanghai") 
 
 export function normalizeClock(value) {
   if (!value) return "00:00";
-  const cleaned = String(value).trim().replace("：", ":");
+
+  const cleaned = String(value).trim().replaceAll("：", ":");
   if (/^\d{1,2}:\d{2}$/.test(cleaned)) {
     const [hour, minute] = cleaned.split(":");
     return `${hour.padStart(2, "0")}:${minute}`;

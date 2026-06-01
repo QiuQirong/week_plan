@@ -24,7 +24,7 @@ const TYPE_MAP = {
   休息: "rest"
 };
 
-const LEGEND = [
+export const LEGEND = [
   { key: "course", label: "学校课程", color: "#6aa9ff" },
   { key: "gridPrep", label: "国网备考", color: "#f3a64f" },
   { key: "exam", label: "学校考试", color: "#ea7373" },
@@ -48,12 +48,11 @@ export async function buildWeekPayload(env, options = {}) {
     ? await queryDataSource(notion, env.NOTION_FIXED_DATA_SOURCE_ID)
     : [];
 
-  const items = [
-    ...normalizeMainRows(mainRows, week, timeZone),
-    ...normalizeFixedRows(fixedRows, week, timeZone)
-  ]
-    .filter(Boolean)
-    .sort((left, right) => new Date(left.start) - new Date(right.start));
+  const normalizedMain = normalizeMainRows(mainRows, week, timeZone);
+  const normalizedFixed = normalizeFixedRows(fixedRows, week, timeZone);
+  const items = mergeItems(normalizedMain, normalizedFixed).sort(
+    (left, right) => new Date(left.start) - new Date(right.start)
+  );
 
   const days = week.days.map((day) => ({
     ...day,
@@ -63,7 +62,9 @@ export async function buildWeekPayload(env, options = {}) {
   return {
     weekLabel: formatWeekLabel(week.start, week.end, timeZone),
     updatedAtLabel: formatDateTimeLabel(now, timeZone),
-    sources: fixedRows.length ? ["周时间轴 / 全部计划", "课程表 / 固定安排"] : ["周时间轴 / 全部计划"],
+    sources: fixedRows.length
+      ? ["周时间轴 / 全部计划", "课程表 / 固定安排"]
+      : ["周时间轴 / 全部计划"],
     legend: LEGEND,
     days,
     items
@@ -99,7 +100,7 @@ export function createNotionClient(apiKey) {
 
 export async function queryDataSource(notion, dataSourceId) {
   const results = [];
-  let cursor = undefined;
+  let cursor;
 
   while (true) {
     const payload = await notion.queryDataSource(dataSourceId, {
@@ -108,7 +109,6 @@ export async function queryDataSource(notion, dataSourceId) {
     });
 
     results.push(...payload.results);
-
     if (!payload.has_more || !payload.next_cursor) {
       break;
     }
@@ -153,7 +153,16 @@ function normalizeMainRows(rows, week, timeZone) {
         return null;
       }
 
-      return makeItem(page.id, title, typeLabel, start, end, dateKey);
+      return makeItem({
+        id: page.id,
+        title,
+        typeLabel,
+        start,
+        end,
+        dateKey,
+        source: "main",
+        isSample: /^示例[:：]/u.test(title)
+      }, timeZone);
     })
     .filter(Boolean);
 }
@@ -170,8 +179,8 @@ function normalizeFixedRows(rows, week, timeZone) {
       const typeLabel = getSelectLike(page.properties, ["类型", "来源"]) || "项目固定块";
       const specificDate = getDate(page.properties, ["本次日期", "日期"]);
       const weekday = getSelectLike(page.properties, ["星期"]);
-      const startClock = getTextLike(page.properties, ["开始时间"]);
-      const endClock = getTextLike(page.properties, ["结束时间"]);
+      const startClock = normalizeClock(getTextLike(page.properties, ["开始时间"]));
+      const endClock = normalizeClock(getTextLike(page.properties, ["结束时间"]));
 
       let dateKey = null;
 
@@ -186,17 +195,47 @@ function normalizeFixedRows(rows, week, timeZone) {
         return null;
       }
 
-      const start = combineDateAndClock(dateKey, normalizeClock(startClock), timeZone);
+      const start = combineDateAndClock(dateKey, startClock, timeZone);
       const end = endClock
-        ? combineDateAndClock(dateKey, normalizeClock(endClock), timeZone)
+        ? combineDateAndClock(dateKey, endClock, timeZone)
         : new Date(start.getTime() + 60 * 60 * 1000);
 
-      return makeItem(page.id, title, typeLabel, start, end, dateKey, timeZone);
+      return makeItem({
+        id: page.id,
+        title,
+        typeLabel,
+        start,
+        end,
+        dateKey,
+        source: "fixed",
+        isSample: false
+      }, timeZone);
     })
     .filter(Boolean);
 }
 
-function makeItem(id, title, typeLabel, start, end, dateKey, timeZone = "Asia/Shanghai") {
+function mergeItems(mainItems, fixedItems) {
+  const fixed = [...fixedItems];
+  const filteredMain = mainItems.filter((item) => {
+    if (!item.isSample) {
+      return true;
+    }
+
+    return !fixed.some((fixedItem) => overlaps(item, fixedItem));
+  });
+
+  return [...filteredMain, ...fixed];
+}
+
+function overlaps(left, right) {
+  if (left.dateKey !== right.dateKey) {
+    return false;
+  }
+
+  return left.startMinute < right.endMinute && right.startMinute < left.endMinute;
+}
+
+function makeItem({ id, title, typeLabel, start, end, dateKey, source, isSample }, timeZone) {
   return {
     id,
     title: simplifyTitle(title),
@@ -207,7 +246,9 @@ function makeItem(id, title, typeLabel, start, end, dateKey, timeZone = "Asia/Sh
     end: end.toISOString(),
     startMinute: minutesIntoDay(start, timeZone),
     endMinute: minutesIntoDay(end, timeZone),
-    timeLabel: `${formatClockLabel(start, timeZone)} - ${formatClockLabel(end, timeZone)}`
+    timeLabel: `${formatClockLabel(start, timeZone)} - ${formatClockLabel(end, timeZone)}`,
+    source,
+    isSample
   };
 }
 
@@ -234,9 +275,10 @@ function getSelectLike(properties, names) {
   if (property.type === "status") return property.status?.name ?? "";
   if (property.type === "rich_text") return richTextToPlain(property.rich_text);
   if (property.type === "title") return richTextToPlain(property.title);
-  if (property.type === "formula") {
-    if (property.formula.type === "string") return property.formula.string ?? "";
+  if (property.type === "formula" && property.formula.type === "string") {
+    return property.formula.string ?? "";
   }
+
   return "";
 }
 
@@ -251,6 +293,7 @@ function getTextLike(properties, names) {
     if (property.formula.type === "string") return property.formula.string ?? "";
     if (property.formula.type === "number") return String(property.formula.number ?? "");
   }
+
   return "";
 }
 

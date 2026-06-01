@@ -39,12 +39,12 @@ void loadWeek();
 async function loadWeek({ force = false } = {}) {
   plannerEl.innerHTML = `<div class="planner-loading">${force ? "正在刷新..." : "正在读取本周安排..."}</div>`;
 
-  const url = force ? `${API_URL}?ts=${Date.now()}` : API_URL;
+  const suffix = force ? `?ts=${Date.now()}` : "";
 
   try {
-    let response = await fetch(url);
+    let response = await fetch(`${API_URL}${suffix}`, { cache: "no-store" });
     if (!response.ok) {
-      response = await fetch(force ? `${MOCK_URL}?ts=${Date.now()}` : MOCK_URL);
+      response = await fetch(`${MOCK_URL}${suffix}`, { cache: "no-store" });
     }
     if (!response.ok) {
       throw new Error(`Request failed with ${response.status}`);
@@ -54,7 +54,7 @@ async function loadWeek({ force = false } = {}) {
     renderWeek(payload);
   } catch (error) {
     console.error(error);
-    plannerEl.innerHTML = `<div class="planner-empty">读取失败了。先检查 Notion token 和数据源 id，再试一次。</div>`;
+    plannerEl.innerHTML = `<div class="planner-empty">读取失败了。先检查部署和 Notion 配置，再试一次。</div>`;
   }
 }
 
@@ -68,7 +68,7 @@ function renderWeek(payload) {
   renderLegend(legend);
 
   if (!items.length) {
-    plannerEl.innerHTML = `<div class="planner-empty">这周还没有安排。先在 Notion 主库里加几条课表或计划吧。</div>`;
+    plannerEl.innerHTML = `<div class="planner-empty">这周还没有安排。先去 Notion 主库里加几条课程或计划吧。</div>`;
     return;
   }
 
@@ -104,8 +104,7 @@ function renderWeek(payload) {
   grid.append(timeColumn);
 
   days.forEach((day) => {
-    const dayColumn = createDayColumn(day, items);
-    grid.append(dayColumn);
+    grid.append(createDayColumn(day, items));
   });
 
   plannerEl.innerHTML = "";
@@ -159,9 +158,10 @@ function formatHour(hour) {
 function bootTheme() {
   const urlTheme = new URL(window.location.href).searchParams.get("theme");
   const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  const theme = urlTheme === "light" || urlTheme === "dark"
-    ? urlTheme
-    : savedTheme || "dark";
+  const theme =
+    urlTheme === "light" || urlTheme === "dark"
+      ? urlTheme
+      : savedTheme || "dark";
   applyTheme(theme, { persist: false });
 }
 

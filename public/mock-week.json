@@ -1,0 +1,126 @@
+{
+  "weekLabel": "2026/06/01 - 2026/06/07",
+  "updatedAtLabel": "2026/06/01 10:20",
+  "sources": ["周时间轴 / 全部计划", "课程表 / 固定安排"],
+  "legend": [
+    { "key": "course", "label": "学校课程", "color": "#6aa9ff" },
+    { "key": "gridPrep", "label": "国网备考", "color": "#f3a64f" },
+    { "key": "exam", "label": "学校考试", "color": "#ea7373" },
+    { "key": "fitness", "label": "健身", "color": "#7bc363" },
+    { "key": "social", "label": "社交", "color": "#dcb22c" },
+    { "key": "project", "label": "项目任务 / 项目固定块", "color": "#a27ae8" },
+    { "key": "life", "label": "生活杂务", "color": "#9f9488" },
+    { "key": "rest", "label": "休息", "color": "#8f6a43" }
+  ],
+  "days": [
+    { "dateKey": "2026-06-01", "dateLabel": "2026/06/01", "dayLabel": "周一", "summary": "3 项安排" },
+    { "dateKey": "2026-06-02", "dateLabel": "2026/06/02", "dayLabel": "周二", "summary": "2 项安排" },
+    { "dateKey": "2026-06-03", "dateLabel": "2026/06/03", "dayLabel": "周三", "summary": "3 项安排" },
+    { "dateKey": "2026-06-04", "dateLabel": "2026/06/04", "dayLabel": "周四", "summary": "1 项安排" },
+    { "dateKey": "2026-06-05", "dateLabel": "2026/06/05", "dayLabel": "周五", "summary": "1 项安排" },
+    { "dateKey": "2026-06-06", "dateLabel": "2026/06/06", "dayLabel": "周六", "summary": "0 项安排" },
+    { "dateKey": "2026-06-07", "dateLabel": "2026/06/07", "dayLabel": "周日", "summary": "1 项安排" }
+  ],
+  "items": [
+    {
+      "id": "1",
+      "title": "高电压技术",
+      "typeKey": "course",
+      "typeLabel": "学校课程",
+      "dateKey": "2026-06-01",
+      "start": "2026-06-01T08:00:00+08:00",
+      "end": "2026-06-01T09:40:00+08:00",
+      "timeLabel": "08:00 - 09:40"
+    },
+    {
+      "id": "2",
+      "title": "PLC",
+      "typeKey": "course",
+      "typeLabel": "学校课程",
+      "dateKey": "2026-06-01",
+      "start": "2026-06-01T15:00:00+08:00",
+      "end": "2026-06-01T16:40:00+08:00",
+      "timeLabel": "15:00 - 16:40"
+    },
+    {
+      "id": "3",
+      "title": "国网固定自习",
+      "typeKey": "gridPrep",
+      "typeLabel": "国网备考",
+      "dateKey": "2026-06-01",
+      "start": "2026-06-01T19:00:00+08:00",
+      "end": "2026-06-01T21:00:00+08:00",
+      "timeLabel": "19:00 - 21:00"
+    },
+    {
+      "id": "4",
+      "title": "学校课程笔记整理",
+      "typeKey": "life",
+      "typeLabel": "生活杂务",
+      "dateKey": "2026-06-02",
+      "start": "2026-06-02T20:30:00+08:00",
+      "end": "2026-06-02T22:00:00+08:00",
+      "timeLabel": "20:30 - 22:00"
+    },
+    {
+      "id": "5",
+      "title": "高电压技术",
+      "typeKey": "course",
+      "typeLabel": "学校课程",
+      "dateKey": "2026-06-03",
+      "start": "2026-06-03T15:00:00+08:00",
+      "end": "2026-06-03T16:40:00+08:00",
+      "timeLabel": "15:00 - 16:40"
+    },
+    {
+      "id": "6",
+      "title": "力量训练",
+      "typeKey": "fitness",
+      "typeLabel": "健身",
+      "dateKey": "2026-06-03",
+      "start": "2026-06-03T18:30:00+08:00",
+      "end": "2026-06-03T19:30:00+08:00",
+      "timeLabel": "18:30 - 19:30"
+    },
+    {
+      "id": "7",
+      "title": "国网错题整理",
+      "typeKey": "gridPrep",
+      "typeLabel": "国网备考",
+      "dateKey": "2026-06-03",
+      "start": "2026-06-03T21:00:00+08:00",
+      "end": "2026-06-03T22:00:00+08:00",
+      "timeLabel": "21:00 - 22:00"
+    },
+    {
+      "id": "8",
+      "title": "项目A 里程碑推进",
+      "typeKey": "project",
+      "typeLabel": "项目任务 / 项目固定块",
+      "dateKey": "2026-06-04",
+      "start": "2026-06-04T15:00:00+08:00",
+      "end": "2026-06-04T17:30:00+08:00",
+      "timeLabel": "15:00 - 17:30"
+    },
+    {
+      "id": "9",
+      "title": "朋友晚饭",
+      "typeKey": "social",
+      "typeLabel": "社交",
+      "dateKey": "2026-06-05",
+      "start": "2026-06-05T18:30:00+08:00",
+      "end": "2026-06-05T20:30:00+08:00",
+      "timeLabel": "18:30 - 20:30"
+    },
+    {
+      "id": "10",
+      "title": "补觉",
+      "typeKey": "rest",
+      "typeLabel": "休息",
+      "dateKey": "2026-06-07",
+      "start": "2026-06-07T09:00:00+08:00",
+      "end": "2026-06-07T11:00:00+08:00",
+      "timeLabel": "09:00 - 11:00"
+    }
+  ]
+}

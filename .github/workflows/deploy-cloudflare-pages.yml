@@ -1,4 +1,4 @@
-name: Deploy Cloudflare Pages
+name: Deploy Cloudflare Worker
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: cloudflare-pages
+  group: cloudflare-worker
   cancel-in-progress: true
 
 jobs:
@@ -18,9 +18,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: c1b302f21ec2bf6219244bf3fb34878a
-          command: pages deploy public --project-name=week-plan --branch=main
+          node-version: 22
+
+      - name: Build single-file worker
+        run: node scripts/build-worker-site.mjs
+
+      - name: Deploy worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: c1b302f21ec2bf6219244bf3fb34878a
+        run: npx wrangler@4.95.0 deploy

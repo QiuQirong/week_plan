@@ -115,19 +115,33 @@ function createDayColumn(day, items) {
   const column = document.createElement("div");
   column.className = "day-column";
 
-  const dayItems = items.filter((item) => item.dateKey === day.dateKey);
+  const dayItems = layoutDayItems(items.filter((item) => item.dateKey === day.dateKey));
 
-  dayItems.forEach((item) => {
+  dayItems.forEach(({ item, laneIndex, laneCount }) => {
     const block = document.createElement("article");
     block.className = `event-block ${TYPE_META[item.typeKey]?.className ?? "type-life"}`;
 
-    const startHour = (item.startMinute ?? minutesFromIso(item.start)) / 60;
-    const endHour = (item.endMinute ?? minutesFromIso(item.end)) / 60;
+    const startMinute = resolveStartMinute(item);
+    const endMinute = resolveEndMinute(item);
+    const startHour = startMinute / 60;
+    const endHour = endMinute / 60;
     const top = Math.max(0, startHour - 6) * 72;
     const height = Math.max(44, (endHour - startHour) * 72 - 6);
+    const horizontalGap = 6;
+    const inset = 8;
+    const usableWidth = `calc(100% - ${inset * 2}px)`;
+    const width =
+      laneCount > 1
+        ? `calc((${usableWidth} - ${(laneCount - 1) * horizontalGap}px) / ${laneCount})`
+        : usableWidth;
+    const left = laneCount > 1 ? `calc(${inset}px + ${laneIndex} * (${width} + ${horizontalGap}px))` : `${inset}px`;
 
     block.style.top = `${top + 4}px`;
     block.style.height = `${height}px`;
+    block.style.left = left;
+    block.style.width = width;
+    block.style.right = "auto";
+    block.style.zIndex = String(10 + laneIndex);
     block.innerHTML = `
       <span class="event-time">${item.timeLabel}</span>
       <span class="event-title">${escapeHtml(item.title)}</span>
@@ -155,6 +169,72 @@ function formatHour(hour) {
   return `${String(hour).padStart(2, "0")}:00`;
 }
 
+function layoutDayItems(items) {
+  const sorted = [...items].sort((left, right) => {
+    const startDiff = resolveStartMinute(left) - resolveStartMinute(right);
+    if (startDiff !== 0) return startDiff;
+
+    const endDiff = resolveEndMinute(right) - resolveEndMinute(left);
+    if (endDiff !== 0) return endDiff;
+
+    return left.title.localeCompare(right.title, "zh-CN");
+  });
+
+  const laidOut = [];
+  let group = [];
+  let groupEndMinute = -1;
+
+  const flushGroup = () => {
+    if (!group.length) return;
+
+    const laneEnds = [];
+    const groupLayouts = group.map((item) => {
+      const startMinute = resolveStartMinute(item);
+      const endMinute = resolveEndMinute(item);
+      let laneIndex = laneEnds.findIndex((laneEndMinute) => startMinute >= laneEndMinute);
+
+      if (laneIndex === -1) {
+        laneIndex = laneEnds.length;
+        laneEnds.push(endMinute);
+      } else {
+        laneEnds[laneIndex] = endMinute;
+      }
+
+      return { item, laneIndex };
+    });
+
+    const laneCount = Math.max(1, laneEnds.length);
+    groupLayouts.forEach((entry) => {
+      laidOut.push({
+        item: entry.item,
+        laneIndex: entry.laneIndex,
+        laneCount
+      });
+    });
+
+    group = [];
+    groupEndMinute = -1;
+  };
+
+  sorted.forEach((item) => {
+    const startMinute = resolveStartMinute(item);
+    const endMinute = resolveEndMinute(item);
+
+    if (!group.length || startMinute < groupEndMinute) {
+      group.push(item);
+      groupEndMinute = Math.max(groupEndMinute, endMinute);
+      return;
+    }
+
+    flushGroup();
+    group.push(item);
+    groupEndMinute = endMinute;
+  });
+
+  flushGroup();
+  return laidOut;
+}
+
 function bootTheme() {
   const urlTheme = new URL(window.location.href).searchParams.get("theme");
   const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -180,6 +260,16 @@ function applyTheme(theme, { persist = true } = {}) {
 function minutesFromIso(iso) {
   const date = new Date(iso);
   return date.getHours() * 60 + date.getMinutes();
+}
+
+function resolveStartMinute(item) {
+  return item.startMinute ?? minutesFromIso(item.start);
+}
+
+function resolveEndMinute(item) {
+  const startMinute = resolveStartMinute(item);
+  const rawEndMinute = item.endMinute ?? minutesFromIso(item.end);
+  return rawEndMinute > startMinute ? rawEndMinute : startMinute + 60;
 }
 
 function escapeHtml(input) {
